@@ -287,26 +287,26 @@
         <button type="button" class="btn btn-primary center" onclick="initAuth(this)">Start Chat</button>
 
 
-        <div class="container-fluid mt-4 mb-4 h-auto row">
+        <div class="container-fluid mt-4 h-auto row">
             <ul class="list-group flex-column nav col-4" id="chatsList">
             </ul>
 
-            <ul class="list-group  me-2 col overflow-auto " id="chatMessages">
+            <ul class="list-group  me-2 mb-2 col overflow-auto " id="chatMessages">
             </ul>
         </div>
         <div class="container-fluid mt-4 mb-4 h-auto row">
 
-        <form class='fixed-bottom' onsubmit="sendMessage(event); return false">
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="What's Gleaning?" id="messageBox"
-                    onchange="updateMessage(event)">
+            <form class='fixed-bottom' onsubmit="sendMessage(event); return false">
+                <div class="input-group pb-4" style="background-color: white;">
+                    <input type="text" class="form-control" placeholder="What's Gleaning?" id="messageBox"
+                        onchange="updateMessage(event)">
 
-                <button class="btn btn-outline-primary d-none" type="button" id="loader">⏳</button>
-                <button class=" input-group-text btn btn-primary" type="submit">Send</button>
-            </div>
-        </form>
+                    <button class="btn btn-outline-primary d-none" type="button" id="loader">⏳</button>
+                    <button class=" input-group-text btn btn-primary" type="submit">Send</button>
+                </div>
+            </form>
         </div>
-        
+
     </div>
 
 </body>
