@@ -1,0 +1,18 @@
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising Glean APIs with credentials
+Thu, 06 Mar 2025 07:59:40 GMT		{"host":"https://support-lab-be.glean.com"}
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising auth.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised auth.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising chat.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised chat.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising data-sources.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised data-sources.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising group.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised group.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising indexing.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised indexing.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising searching.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised searching.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialising user.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised user.js APIs
+Thu, 06 Mar 2025 07:59:40 GMT		Initialised Glean APIs with credentials
+Thu, 06 Mar 2025 07:59:40 GMT		{"host":"https://support-lab-be.glean.com","bearerToken":"--","globalToken":"---="}
