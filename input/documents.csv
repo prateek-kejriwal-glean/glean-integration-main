@@ -1,1 +1,3 @@
-id,viewURL,datasource,allowAnonymousAccess,tags
+id,viewURL,title,summary,datasource,allowAnonymousAccess,tags
+obj3,https://www.example.com/1,ROFL,Right on the Floor Laughing,prateektest,true,acronyms
+obj4,https://www.example.com/1,LOL,Laugh out Loud,prateektest,true,acronyms

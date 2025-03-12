@@ -2,18 +2,18 @@ const config = require('./config')
 const { log, init: initLogger } = require('./lib/logger/index')
 const { loadDocuments } = require('./lib/utils/input')
 const GleanApis = require('./lib/api')
-const api = new GleanApis(config.host, config.indexingToken)
-const gleanClient = api.getClient()
+
 
 initLogger({ loggingPath: config.loggingPath, toConsole: true })
 globalThis.log = log
 
-
+const api = new GleanApis(config.host, config.indexingToken)
+const gleanClient = api.getClient()
 globalThis.gleanClient = gleanClient
 
 async function init() {
     globalThis.log(`Loading Documents from CSV File at location -  ${config.docCSV}`)
-    const documents = await loadDocuments(config.docCSV, { fetchViewUrl: true })
+    const documents = await loadDocuments(config.docCSV, { fetchViewUrl: false })
 
     globalThis.log(`Bulk Indexing Documents to the data source -  ${config.dataSourceId}`)
     const response = await gleanClient.indexDocuments(config.dataSourceId, documents)
