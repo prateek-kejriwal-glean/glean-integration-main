@@ -238,7 +238,10 @@
                 if (!citations) return
                 if (citations.length > 0) {
                     citationsElement.innerHTML === '' ? citationsElement.innerHTML = '<br/><span>References:</span><br/> ' : citationsElement.innerHTML
-                    citationsElement.innerHTML += citations.map(citation => { return `<a href="${citation?.sourceFile?.url}">${citation?.sourceFile?.name}</a>` }).join('<br/>')
+                    citationsElement.innerHTML += citations.map(citation => { 
+                        const title = citation?.sourceFile?.name || citation?.sourceDocument?.title 
+                        const link = citation?.sourceFile?.url || citation?.sourceDocument?.url
+                        return `<a href="${link}">${title}</a>` }).join('<br/>')
                 }
             }
             const container = { containerHTMLNode, updateChatId, updateMessage, updateFollowUps, updateCitations }
