@@ -10,16 +10,25 @@
     <script>
         let chatMessage = undefined
         let chatId = undefined;
+        let isWorld = false
         function getChatId() { return chatId }
         function setChatId(value) { chatId = value }
 
         async function initAuth(element) {
             const emailIdForToken = document.getElementById('emailIdForToken').value;
-            if (emailIdForToken) {
-                const tokenResponse = await getToken(emailIdForToken)
-                if (element?.type === 'button') { await populateChatsList() }
-                return tokenResponse
+            const authToken = document.getElementById('authToken').value;
+
+            if (emailIdForToken && authToken) {
+                const auth = { emailId: emailIdForToken, token: authToken }
+                localStorage.setItem('auth', JSON.stringify(auth))
+                await populateChatsList()
+                return auth
+
             }
+        }
+
+        function toggleWorldKnowledge(element) {
+            isWorld = document.getElementById('worldKnowledgeToggle').checked
         }
 
         async function getToken(emailId) {
@@ -43,12 +52,9 @@
             const storedAuth = localStorage.getItem('auth')
             if (storedAuth) {
                 const auth = JSON.parse(storedAuth)
-                const now = Date.now() / 1000
-                if (now < auth.expirationTime - 600) {
-                    return auth
-                } else {
-                    return undefined
-                }
+
+                return auth
+
             } else {
                 return undefined
             }
@@ -84,13 +90,14 @@
         }
         async function sendMessage(event) {
             const chatId = getChatId()
-            const auth = await initAuth()
+            const auth = getAuthFromStorage()
             const message = "" + chatMessage
+
             clearMessageBox()
             toggleLoader()
             const requestOptions = {
                 method: 'POST',
-                body: JSON.stringify(createChatRequestMessage(message, chatId)),
+                body: JSON.stringify(createChatRequestMessage(message, chatId, isWorld)),
                 headers: { 'content-type': 'application/json', "Authorization": `${auth.token}` }
             }
             const myMessage = createMyMessageHTML(message, chatId)
@@ -113,12 +120,7 @@
                     for (const message of splitMessages) {
                         try {
                             const resp = JSON.parse(message)
-                            const gleanMessage = parseGleanMessages(resp)
-                            setChatId(gleanMessage.chatId)
-                            responseMessage.updateChatId(gleanMessage.chatId)
-                            responseMessage.updateMessage(gleanMessage.message)
-                            responseMessage.updateFollowUps(gleanMessage.followUpPrompts)
-
+                            handleGleanResponse(responseMessage, resp)
                         } catch (exc) {
                             pendingMessages.push(message)
                             pendingMessage = checkIfValidJSON(pendingMessages)
@@ -134,6 +136,11 @@
 
 
                 }
+            }
+            if (pendingMessage) {
+                console.log("Pending Message", pendingMessage)
+                handleGleanResponse(responseMessage, JSON.parse(pendingMessage))
+                pendingMessage=undefined
             }
             toggleLoader()
 
@@ -153,18 +160,30 @@
             setChatId(response.chatId)
             const messagesTexts = []
             let followUpPrompts = undefined
+            let citations = []
             if (response.followUpPrompts) followUpPrompts = response.followUpPrompts
             if (messages)
                 for (const message of messages) {
-                    response?.messages.forEach((message => { if (message.messageType == 'CONTENT') { message.fragments.forEach(fragment => { messagesTexts.push(fragment.text) }) } }))
+                    response.messages.forEach((message => {
+                        if (message.messageType === 'CONTENT') {
+                            message?.fragments?.forEach(fragment => { messagesTexts.push(fragment.text) })
+                            if (message.citations !== undefined) {
+                                citations.push(...message.citations)
+                            }
+                        }
+                    }))
                 }
-            return { followUpPrompts, chatId: getChatId(), message: messagesTexts.join('') }
+            return { followUpPrompts, chatId: getChatId(), message: messagesTexts.join(''), citations }
         }
-        function createChatRequestMessage(messageText, chatId) {
+        function createChatRequestMessage(messageText, chatId, isWorld) {
             const message = {
                 saveChat: true,
                 stream: true,
                 messages: [{ author: "USER", fragments: [{ text: messageText }] }]
+            }
+            if (isWorld) {
+                message.actionHints = ['Gemini Web Search']
+                message.agentConfig = { agent: 'GPT' }
             }
             if (chatId) message.chatId = chatId
             return message
@@ -197,10 +216,11 @@
         }
         function createResponseHTMLContainer() {
             const containerHTMLNode = document.createElement('template');
-            containerHTMLNode.innerHTML = `<div class="list-group-item list-group-item-action flex-column align-items-start"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">Glean Message</h5><span class="text-muted" id="chatId"></span></div><p class="mb-1" id='message'></p><span class="text-muted" id='followups'></span></div>`
+            containerHTMLNode.innerHTML = `<div class="list-group-item list-group-item-action flex-column align-items-start"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">Glean Message</h5><span class="text-muted" id="chatId"></span></div><p class="mb-1" id='message'></p><span class="text-muted" id='followups'></span><span class="text-muted" id='citations'></span></div>`
             const followUpsElement = containerHTMLNode.content.getElementById('followups')
             const chatIdElement = containerHTMLNode.content.getElementById('chatId')
             const messageElement = containerHTMLNode.content.getElementById('message')
+            const citationsElement = containerHTMLNode.content.getElementById('citations')
 
             const updateFollowUps = (followUp) => {
                 if (!followUp) { return }
@@ -214,7 +234,14 @@
                 if (!chatId) return
                 chatIdElement.innerHTML = chatId
             }
-            const container = { containerHTMLNode, updateChatId, updateMessage, updateFollowUps }
+            const updateCitations = (citations) => {
+                if (!citations) return
+                if (citations.length > 0) {
+                    citationsElement.innerHTML === '' ? citationsElement.innerHTML = '<br/><span>References:</span><br/> ' : citationsElement.innerHTML
+                    citationsElement.innerHTML += citations.map(citation => { return `<a href="${citation?.sourceFile?.url}">${citation?.sourceFile?.name}</a>` }).join('<br/>')
+                }
+            }
+            const container = { containerHTMLNode, updateChatId, updateMessage, updateFollowUps, updateCitations }
             return container
         }
         async function populateChatsList() {
@@ -271,6 +298,14 @@
 
         }
 
+        function handleGleanResponse(responseMessage, resp) {
+            const gleanMessage = parseGleanMessages(resp)
+            setChatId(gleanMessage.chatId)
+            responseMessage.updateChatId(gleanMessage.chatId)
+            responseMessage.updateMessage(gleanMessage.message)
+            responseMessage.updateFollowUps(gleanMessage.followUpPrompts)
+            responseMessage.updateCitations(gleanMessage.citations)
+        }
     </script>
 </head>
 
@@ -284,7 +319,16 @@
             <label for="emailIdForToken" class="form-label">Email address</label>
             <input type="email" class="form-control" id="emailIdForToken" placeholder="someone@glean-sandbox.com">
         </div>
-        <button type="button" class="btn btn-primary center" onclick="initAuth(this)">Start Chat</button>
+        <div class="mb-3">
+            <label for="authToken" class="form-label">Auth Token </label>
+            <input type="email" class="form-control" id="authToken" placeholder="Some Random Gibberish Value">
+        </div>
+        <div class="form-check form-switch m-3">
+            <input class="form-check-input" type="checkbox" role="switch" onclick="toggleWorldKnowledge()"
+                id="worldKnowledgeToggle">
+            <label class="form-check-label" for="worldKnowledgeToggle">Lets Search the World </label>
+        </div>
+        <button type="button" class="btn btn-primary center" onclick="initAuth()">Start Chat</button>
 
 
         <div class="container-fluid mt-4 h-auto row">

@@ -1,6 +1,6 @@
 const config = require('./config')
 const { log, init: initLogger } = require('./lib/logger/index')
-initLogger({ loggingPath: config.loggingPath, fileName: 'demo-logs', toConsole: true })
+initLogger({ loggingPath: config.loggingPath, fileName: 'demo-logs', toConsole: false })
 globalThis.log = log
 
 const GleanApis = require('./lib/api')
@@ -22,7 +22,7 @@ app.use(Express.json())
 app.use('/api', require('./lib/routes'))
 app.use(Express.static('./web'))
 
-app.listen(8080, () => { console.log('Service is up') })
+app.listen(80, () => { console.log('Service is up') })
 
 
 
