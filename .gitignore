@@ -1,1 +1,4 @@
 node_modules
+creds.js
+logs/*.log
+cache/*.cache
