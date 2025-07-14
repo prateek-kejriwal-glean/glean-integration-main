@@ -1,15 +1,9 @@
 const config = require('./config')
 const cors = require('cors')
 const KeyV = require('keyv').Keyv
-const { KeyvFile } = require('keyv-file')
+// const { KeyvFile } = require('keyv-file')
 
-globalThis.cache = new KeyV({
-    store: new KeyvFile({
-        filename: './cache/auth.cache',
-        encode: JSON.stringify,
-        decode: JSON.parse
-    })
-})
+globalThis.cache = new KeyV()
 
 const { log, init: initLogger } = require('./lib/logger/index')
 initLogger({ loggingPath: config.loggingPath, fileName: 'logs.log', toConsole: true })
@@ -36,11 +30,11 @@ const cookieParser = require('cookie-parser')
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
 app.use(cookieParser(), extractAuthStateToRequest, extractAuthTokenToBody, extractAPIHost)
-app.use(Express.json())
+app.use(Express.json({ limit: '50mb' }))
 app.use('/api', require('./lib/routes'))
 app.use(Express.static('./web'))
 
-app.listen(80, () => { console.log('Service is up') })
+app.listen(process.env['PORT'], () => { console.log('Service is up') })
 
 
 
